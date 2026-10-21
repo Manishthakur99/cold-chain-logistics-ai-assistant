@@ -35,46 +35,46 @@ flowchart TB
     end
 
     subgraph Core_Agent["🧠 LangGraph Autonomous Orchestrator"]
-        START_NODE((Start)) --> REASONER["Reasoner Node\n(DeepSeek-V4 / GPT-4o / Ollama)"]
-        REASONER --> CONDITIONAL{"Tool Call\nRequired?"}
+        START_NODE((Start)) --> REASONER["Reasoner Node<br/>(DeepSeek-V4 / GPT-4o / Ollama)"]
+        REASONER --> CONDITIONAL{"Tool Call<br/>Required?"}
         CONDITIONAL -- "Yes" --> TOOL_NODE["ToolNode (LangGraph)"]
         TOOL_NODE --> REASONER
         CONDITIONAL -- "No" --> END_NODE((End / Render Plan))
     end
 
     subgraph Tool_Ecosystem["🔧 Enterprise Tool Ecosystem"]
-        T1["query_telemetry_db\n(T-SQL Engine)"]
-        T2["fetch_corridor_conditions\n(Open-Meteo REST API)"]
-        T3["search_compliance_sop\n(Pinecone Vector Search)"]
+        T1["query_telemetry_db<br/>(T-SQL Engine)"]
+        T2["fetch_corridor_conditions<br/>(Open-Meteo REST API)"]
+        T3["search_compliance_sop<br/>(Pinecone Vector Search)"]
     end
 
     subgraph Data_Storage["💾 Enterprise Data & Security Layer"]
         subgraph MSSQL["Microsoft SQL Server (Production)"]
-            RAW_TABLE["dbo.TBL_SC_FLEET_HIST_RAW\n(Legacy Ingestion)"]
-            SEMANTIC_VIEW["FDE_VIEWS.VW_ACTIVE_FLEET\n(Clean English Semantic View)"]
-            AUDIT_TABLE["FDE_VIEWS.AgentAuditLog\n(Deterministic Traceability)"]
+            RAW_TABLE["dbo.TBL_SC_FLEET_HIST_RAW<br/>(Legacy Ingestion)"]
+            SEMANTIC_VIEW["FDE_VIEWS.VW_ACTIVE_FLEET<br/>(Clean English Semantic View)"]
+            AUDIT_TABLE["FDE_VIEWS.AgentAuditLog<br/>(Deterministic Traceability)"]
         end
         subgraph VectorStore["Pinecone Serverless"]
-            PINECONE_INDEX["fde-sop-index-*\n(1024 / 1536 Cosine Index)"]
+            PINECONE_INDEX["fde-sop-index-*<br/>(1024 / 1536 Cosine Index)"]
         end
         subgraph ExternalAPIs["External Intelligence"]
-            METEO_API["Live Meteorology API\n(Wind, Temp, Transit Index)"]
+            METEO_API["Live Meteorology API<br/>(Wind, Temp, Transit Index)"]
         end
     end
 
     %% Flow connections
-    UI_DISPATCH <--> Core_Agent
+    UI_DISPATCH <--> REASONER
     TOOL_NODE --> T1
     TOOL_NODE --> T2
     TOOL_NODE --> T3
 
-    T1 -->|Read-Only (USR_FDE_RO)| SEMANTIC_VIEW
-    SEMANTIC_VIEW -.->|Select Translation| RAW_TABLE
-    T2 --> ExternalAPIs
+    T1 -->|"Read-Only: USR_FDE_RO"| SEMANTIC_VIEW
+    SEMANTIC_VIEW -.->|"Select Translation"| RAW_TABLE
+    T2 --> METEO_API
     T3 --> PINECONE_INDEX
     
-    Core_Agent -.->|Async Logging| AUDIT_TABLE
-    UI_AUDIT -->|Admin Auth (SA)| AUDIT_TABLE
+    REASONER -.->|"Async Audit Write"| AUDIT_TABLE
+    UI_AUDIT -->|"Admin Auth: SA"| AUDIT_TABLE
 ```
 
 ---
